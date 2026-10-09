@@ -3,76 +3,129 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>nikhilthk | DevOps on GitHub Pages</title>
+  <meta name="description" content="DevOps internship portfolio by nikhilthk: Git, Terraform, Docker and GitHub Pages projects.">
+  <title>nikhilthk | DevOps Portfolio</title>
   <link rel="stylesheet" href="style.css">
+  <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
 </head>
 <body>
+<div id="scrollBar"></div>
 
-<nav class="nav">
-  <span class="logo">⚙️ DevOps Journey</span>
-  <div class="nav-links">
-    <a href="#about">About</a>
+<nav class="nav" id="nav">
+  <a href="#home" class="logo">nikhilthk<span>.dev</span></a>
+  <button id="menuBtn" class="menu-btn" aria-label="Open menu" aria-expanded="false">☰</button>
+  <div class="nav-links" id="navLinks">
+    <a href="#home">Home</a>
+    <a href="#projects">Projects</a>
+    <a href="#terminal">Terminal</a>
     <a href="#pipeline">Pipeline</a>
-    <a href="#checklist">Checklist</a>
+    <a href="#contact">Contact</a>
     <button id="themeToggle" aria-label="Toggle theme">🌙</button>
   </div>
 </nav>
 
-<header class="hero">
-  <p class="eyebrow">DevOps Internship · Task 6</p>
-  <h1>Hello, I'm <span class="accent">nikhilthk</span></h1>
-  <p class="typing">I deploy <span id="typed"></span><span class="cursor">|</span></p>
-  <a class="btn" href="#pipeline">Try the deploy demo ↓</a>
+<header class="hero" id="home">
+  <div class="hero-inner">
+    <p class="eyebrow">DevOps Internship Portfolio</p>
+    <h1>Hi, I'm <span class="grad">nikhilthk</span></h1>
+    <p class="typing">I work with <span id="typed"></span><span class="cursor">|</span></p>
+    <p class="lead">I'm learning DevOps by building real things: version-controlled repos, infrastructure as code, containers and free static hosting.</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#projects">View projects</a>
+      <a class="btn ghost" href="https://github.com/nikhilthk" target="_blank" rel="noopener">GitHub profile ↗</a>
+    </div>
+    <div class="stats">
+      <div><b id="statProjects">0</b><span>Projects</span></div>
+      <div><b id="statTools">0</b><span>Tools used</span></div>
+      <div><b id="statTags">0</b><span>Git tag</span></div>
+    </div>
+  </div>
 </header>
 
 <main>
-  <section id="about">
-    <h2>Why GitHub Pages?</h2>
-    <p class="sub">Free hosting for static sites, straight from a repository.</p>
-    <div class="cards">
-      <div class="card"><div class="icon">💸</div><h3>Free</h3><p>No servers to pay for. Host HTML, CSS and JavaScript at no cost.</p></div>
-      <div class="card"><div class="icon">🔀</div><h3>Git-powered</h3><p>Every push to the main branch updates the live website.</p></div>
-      <div class="card"><div class="icon">⚡</div><h3>Fast to set up</h3><p>Enable it in Settings, pick a branch and your site is live in minutes.</p></div>
-    </div>
+  <section id="projects" class="reveal">
+    <h2>Projects</h2>
+    <p class="sub">Each task lives in its own GitHub repository. Filter by tool, or click a card for details.</p>
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="projectGrid"></div>
   </section>
 
-  <section id="pipeline">
-    <h2>Deploy pipeline demo</h2>
-    <p class="sub">Click the button to watch a push go live.</p>
+  <section id="terminal" class="reveal">
+    <h2>Interactive terminal</h2>
+    <p class="sub">Type a command and press Enter, or tap a shortcut below. Try <code>help</code>.</p>
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i><span>nikhilthk@portfolio: ~</span></div>
+      <div class="term-body" id="termBody" aria-live="polite"></div>
+      <form class="term-input" id="termForm" autocomplete="off">
+        <span>$</span>
+        <input id="termInput" type="text" spellcheck="false" autocapitalize="off" aria-label="Terminal command">
+      </form>
+    </div>
+    <div class="quick" id="quick"></div>
+  </section>
+
+  <section id="pipeline" class="reveal">
+    <h2>CI/CD pipeline simulator</h2>
+    <p class="sub">A simulated pipeline. Push a change and watch it move through each stage.</p>
     <div class="panel">
-      <div class="pipeline">
+      <div class="pipeline" id="stages">
         <div class="stage"><span>📝</span>Commit</div>
         <div class="stage"><span>🔨</span>Build</div>
+        <div class="stage"><span>🧪</span>Test</div>
         <div class="stage"><span>🚀</span>Deploy</div>
         <div class="stage"><span>🌍</span>Live</div>
       </div>
       <div class="pipe-controls">
-        <button class="run" id="runBtn">Run deployment</button>
-        <span id="pipeStatus" class="status">Waiting for a push...</span>
+        <button class="run" id="runBtn">Push to main</button>
+        <label class="switch"><input type="checkbox" id="failToggle"><span>Simulate a failing test</span></label>
+        <span id="pipeStatus" class="status">Idle</span>
       </div>
+      <pre class="log" id="log" aria-live="polite">Waiting for a push...</pre>
     </div>
   </section>
 
-  <section id="checklist">
-    <h2>My deployment checklist</h2>
-    <p class="sub">Tick each step as you go.</p>
+  <section id="contact" class="reveal">
+    <h2>Get in touch</h2>
+    <p class="sub">This is a demo form on a static site. Nothing is sent anywhere.</p>
     <div class="panel">
-      <ul class="checklist">
-        <li><label><input type="checkbox"><span>Create an index.html file</span></label></li>
-        <li><label><input type="checkbox"><span>Push it to a new GitHub repo</span></label></li>
-        <li><label><input type="checkbox"><span>Repo, Settings, Pages, enable GitHub Pages</span></label></li>
-        <li><label><input type="checkbox"><span>Select main branch and root folder</span></label></li>
-        <li><label><input type="checkbox"><span>Open the live link GitHub gives</span></label></li>
-        <li><label><input type="checkbox"><span>Customise with CSS</span></label></li>
-      </ul>
-      <div class="progress"><div id="bar"></div></div>
-      <small><span id="pct">0%</span> complete</small>
-      <p id="doneMsg" class="done-msg" hidden>🎉 All steps done. The site is live!</p>
+      <form id="contactForm" novalidate>
+        <div class="row">
+          <label>Name
+            <input id="cName" type="text" placeholder="Your name">
+            <small class="err" id="eName"></small>
+          </label>
+          <label>Email
+            <input id="cEmail" type="email" placeholder="you@example.com">
+            <small class="err" id="eEmail"></small>
+          </label>
+        </div>
+        <label>Message
+          <textarea id="cMsg" rows="4" maxlength="300" placeholder="Say hello..."></textarea>
+          <small class="count"><span id="cCount">0</span>/300</small>
+          <small class="err" id="eMsg"></small>
+        </label>
+        <button class="run" type="submit">Send message</button>
+      </form>
     </div>
   </section>
 </main>
 
-<footer>Made by nikhilthk · Hosted on GitHub Pages</footer>
+<footer>© <span id="year"></span> nikhilthk · Built with HTML, CSS and JavaScript · Hosted on GitHub Pages</footer>
+
+<button id="toTop" class="to-top" aria-label="Back to top" hidden>↑</button>
+<div id="toast" class="toast" role="status"></div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <span class="badge" id="mBadge"></span>
+    <h3 id="mTitle"></h3>
+    <p id="mDesc"></p>
+    <ul id="mList"></ul>
+    <div class="tags" id="mTags"></div>
+    <a class="btn primary" id="mLink" target="_blank" rel="noopener">Open repository ↗</a>
+  </div>
+</div>
 
 <script src="script.js"></script>
 </body>
