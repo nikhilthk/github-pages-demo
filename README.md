@@ -24,20 +24,4 @@ https://nikhilthk.github.io/github-pages-demo/
 ![Pages settings](screenshots/pages-settings.png)
 ![Live site](screenshots/live-site.png)
 ![Repo with live link](screenshots/repo-with-live-link.png)
-Task 6: GitHub Repository and GitHub Pages
 
-1. Repository Created
-
-"Repo created" (screenshots/repo-created.png)
-
-2. GitHub Pages Settings
-
-"Pages settings" (screenshots/pages-settings.png)
-
-3. Live Website
-
-"Live site" (screenshots/live-site.png)
-
-4. Repository with Live Link
-
-"Repo with live link" (screenshots/repo-with-live-link.png)
