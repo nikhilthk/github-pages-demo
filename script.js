@@ -1,385 +1,199 @@
 (function () {
   'use strict';
-  const $ = (s, el) => (el || document).querySelector(s);
-  const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
-  const root = document.documentElement;
-  const GH = 'https://github.com/nikhilthk/';
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const $ = (s, e) => (e || document).querySelector(s);
+  const $$ = (s, e) => Array.from((e || document).querySelectorAll(s));
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const REPO = 'https://github.com/nikhilthk/github-pages-demo';
 
-  /* ---------- Data ---------- */
-  const projects = [
+  /* Newest first, like git log. Hashes are real only where shown. */
+  const branches = [
     {
-      task: 'Task 3', repo: 'terraform-docker-demo',
-      title: 'Terraform + Docker container',
-      summary: 'Defined a Docker image and an nginx container as code with Terraform.',
-      tags: ['Terraform', 'Docker', 'Codespaces'],
-      points: [
-        'Described the image and the container in a Terraform configuration',
-        'Worked inside GitHub Codespaces',
-        'terraform plan previewed the changes (2 to add)',
-        'terraform destroy cleaned everything up (2 destroyed)'
+      name: 'feature/github-pages', color: '#D1432A', soft: 'rgba(209,67,42,.22)',
+      mergeTitle: 'Merge Task 6: a static website on GitHub Pages',
+      mergeText: 'Task 6 asked for a live HTML site and a repo. This page is the result: hand-written HTML, CSS and JavaScript, published for free.',
+      commits: [
+        { msg: 'Redraw the portfolio as a git graph', text: 'You are looking at it. Each task is a branch, each step is a commit, and the site is still plain files with no framework and no build step.' },
+        { msg: 'Put the live link on the repository', text: `In the repo's About box, "Use your GitHub Pages website" shows the live address next to the code, so a reviewer finds both in one place.` },
+        { msg: 'Enable GitHub Pages from main, root folder', text: 'After saving the setting the site was live within a minute. Every later commit to main republishes it the same way.', code: 'Settings → Pages → Deploy from a branch\nBranch: main    Folder: / (root)' },
+        { msg: 'Add index.html, style.css and script.js', text: 'index.html is the file GitHub Pages serves by default. The CSS and JavaScript sit in their own files so each can change on its own.' },
+        { msg: 'Create a public repository', text: 'Free GitHub Pages needs a public repository, so github-pages-demo is public and has its own README.' }
       ]
     },
     {
-      task: 'Task 4', repo: 'devops-git-project',
-      title: 'Version-controlled DevOps project',
-      summary: 'A full Git workflow with branches, pull requests, a tag and documentation.',
-      tags: ['Git', 'GitHub'],
-      points: [
-        'Created main, dev and feature branches',
-        'Merged changes through pull requests',
-        'Added a README, a Node .gitignore and the v1.0.0 tag',
-        'Documented each step with screenshots'
+      name: 'feature/git-workflow', color: '#0E7A6E', soft: 'rgba(14,122,110,.22)', tag: 'v1.0.0',
+      mergeTitle: 'Merge Task 4: branches, pull requests and a tag',
+      mergeText: 'Task 4 was about working the way teams do: never commit straight to main, merge through pull requests, and mark releases with tags.',
+      commits: [
+        { msg: 'Add screenshots and fix the README formatting', text: 'Every step has a screenshot. The first version of the README section was indented by mistake, which turns it into a code block on GitHub, so a follow-up commit fixed it.' },
+        { msg: 'Merge pull request #2 from nikhilthk/dev', hash: 'e4f8f3c', text: 'dev went into main through a second pull request. main was then tagged v1.0.0.', code: 'git tag -a v1.0.0 -m "First release: README and branching workflow"\ngit push origin v1.0.0' },
+        { msg: 'Merge pull request #1 from nikhilthk/feature/readme-update', hash: '285f38f', text: 'The feature branch went into dev through a pull request, not a direct push.' },
+        { msg: 'docs: add project overview to README', hash: 'bd80cca', text: 'The first real change, made on feature/readme-update, which was branched off dev.' },
+        { msg: 'Create dev and feature branches', text: 'main stays stable. dev collects finished work. Each change gets its own feature branch.', code: 'git checkout -b dev\ngit push -u origin dev' },
+        { msg: 'Initial commit', hash: '820c672', text: 'GitHub created the repository with a README and a Node .gitignore.' }
       ]
     },
     {
-      task: 'Task 6', repo: 'github-pages-demo',
-      title: 'Static website on GitHub Pages',
-      summary: 'This website, deployed for free from the main branch.',
-      tags: ['GitHub Pages', 'HTML/CSS/JS'],
-      points: [
-        'Built with plain HTML, CSS and JavaScript',
-        'Deployed from the main branch and root folder',
-        'Every commit to main republishes the site',
-        'Live link is also shown in the repo About box'
+      name: 'feature/terraform-docker', color: '#6C4DF5', soft: 'rgba(108,77,245,.22)',
+      mergeTitle: 'Merge Task 3: a Docker container, described with Terraform',
+      mergeText: 'Task 3 used infrastructure as code: instead of typing Docker commands by hand, the image and the container are written in a Terraform file.',
+      commits: [
+        { msg: 'terraform apply, then terraform destroy', text: 'apply created the resources and destroy removed them again. The destroy summary said 2 destroyed, matching the 2 that were added.', code: 'Destroy complete! Resources: 2 destroyed.' },
+        { msg: 'terraform plan: 2 to add', text: 'plan previews what Terraform will do before it changes anything. Here it listed the image and the container.', code: 'Plan: 2 to add, 0 to change, 0 to destroy.' },
+        { msg: 'Describe the nginx image and container', text: 'The configuration declares one Docker image and one container that uses it. Running it again gives the same result.' },
+        { msg: 'Open a Codespace for terraform-docker-demo', text: 'The work happened in GitHub Codespaces, a cloud editor and terminal, so there was nothing to install locally.' }
       ]
     }
   ];
-  const allTags = Array.from(new Set(projects.reduce((a, p) => a.concat(p.tags), [])));
+
+  /* ---------- Render the graph ---------- */
+  function commitHTML(c, bi, ci) {
+    const id = 'd-' + bi + '-' + ci;
+    return '<div class="commit">' +
+      '<button class="c-btn" aria-expanded="false" aria-controls="' + id + '">' +
+        '<span class="c-msg">' + c.msg + '</span>' +
+        (c.hash ? '<span class="c-hash">' + c.hash + '</span>' : '') +
+        '<span class="c-plus" aria-hidden="true">+</span>' +
+      '</button>' +
+      '<div class="c-detail" id="' + id + '"><div>' +
+        '<p>' + c.text + '</p>' +
+        (c.code ? '<pre><code>' + c.code + '</code></pre>' : '') +
+      '</div></div>' +
+    '</div>';
+  }
+  function branchHTML(b, i) {
+    return '<article class="branch" style="--c:' + b.color + ';--soft:' + b.soft + ';--i:' + i + '" data-i="' + i + '">' +
+      '<div class="merge-row"><h2>' + b.mergeTitle + '</h2><p>' + b.mergeText + '</p>' +
+        (b.tag ? '<span class="tagpill">tag: ' + b.tag + '</span>' : '') + '</div>' +
+      '<svg class="curve" viewBox="0 0 84 52" aria-hidden="true"><path pathLength="1" d="M18 0 C18 28 54 24 54 52"/></svg>' +
+      '<div class="commits">' +
+        '<div class="tip-row"><button class="bname" data-i="' + i + '" aria-pressed="false" title="git checkout ' + b.name + '"><span class="hd">HEAD -&gt;</span>' + b.name + '</button></div>' +
+        b.commits.map((c, j) => commitHTML(c, i, j)).join('') +
+      '</div>' +
+      '<svg class="curve" viewBox="0 0 84 52" aria-hidden="true"><path pathLength="1" d="M54 0 C54 28 18 24 18 52"/></svg>' +
+    '</article>';
+  }
+  const host = $('#branches');
+  host.insertAdjacentHTML('beforeend', branches.map(branchHTML).join(''));
 
   /* ---------- Toast ---------- */
-  const toast = $('#toast');
+  const toastEl = $('#toast');
   let toastTimer;
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add('show');
+  function toast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2400);
   }
 
-  /* ---------- Theme ---------- */
-  const themeBtn = $('#themeToggle');
-  const currentTheme = () => root.getAttribute('data-theme') || 'light';
-  function setTheme(t) {
-    root.setAttribute('data-theme', t);
-    themeBtn.textContent = t === 'dark' ? '☀️' : '🌙';
-    try { localStorage.setItem('theme', t); } catch (e) {}
-  }
-  function toggleTheme() { setTheme(currentTheme() === 'dark' ? 'light' : 'dark'); }
-  let saved = null;
-  try { saved = localStorage.getItem('theme'); } catch (e) {}
-  setTheme(saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-  themeBtn.addEventListener('click', toggleTheme);
+  /* ---------- Expand commits and check out branches ---------- */
+  const resetBtn = $('#resetBtn');
+  let focused = null;
 
-  /* ---------- Mobile menu ---------- */
-  const menuBtn = $('#menuBtn');
-  const navLinks = $('#navLinks');
-  function closeMenu() { navLinks.classList.remove('open'); menuBtn.setAttribute('aria-expanded', 'false'); }
-  menuBtn.addEventListener('click', () => {
-    const open = navLinks.classList.toggle('open');
-    menuBtn.setAttribute('aria-expanded', String(open));
-  });
-  $$('#navLinks a').forEach((a) => a.addEventListener('click', closeMenu));
-
-  /* ---------- Typing effect ---------- */
-  const words = ['Git and GitHub', 'Terraform', 'Docker containers', 'GitHub Pages'];
-  const typed = $('#typed');
-  let w = 0, c = 0, deleting = false;
-  function type() {
-    const word = words[w];
-    typed.textContent = word.slice(0, c);
-    if (!deleting && c < word.length) { c++; setTimeout(type, 90); }
-    else if (!deleting) { deleting = true; setTimeout(type, 1300); }
-    else if (c > 0) { c--; setTimeout(type, 45); }
-    else { deleting = false; w = (w + 1) % words.length; setTimeout(type, 300); }
+  function setOpen(commit, open) {
+    commit.classList.toggle('open', open);
+    $('.c-btn', commit).setAttribute('aria-expanded', String(open));
   }
-  type();
-
-  /* ---------- Counters ---------- */
-  function countUp(el, target) {
-    const dur = 1200;
-    const start = performance.now();
-    function step(now) {
-      const p = Math.min((now - start) / dur, 1);
-      el.textContent = Math.round(target * p);
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-  countUp($('#statProjects'), projects.length);
-  countUp($('#statTools'), allTags.length);
-  countUp($('#statTags'), 1);
-
-  /* ---------- Projects: filters, cards, modal ---------- */
-  const filtersEl = $('#filters');
-  const gridEl = $('#projectGrid');
-  const modal = $('#modal');
-  let lastFocus = null;
-
-  function openModal(p) {
-    lastFocus = document.activeElement;
-    $('#mBadge').textContent = p.task;
-    $('#mTitle').textContent = p.title;
-    $('#mDesc').textContent = p.summary;
-    const list = $('#mList');
-    list.innerHTML = '';
-    p.points.forEach((pt) => { const li = document.createElement('li'); li.textContent = pt; list.appendChild(li); });
-    const tags = $('#mTags');
-    tags.innerHTML = '';
-    p.tags.forEach((t) => { const s = document.createElement('span'); s.textContent = t; tags.appendChild(s); });
-    $('#mLink').href = GH + p.repo;
-    modal.hidden = false;
-    $('#modalClose').focus();
-  }
-  function closeModal() {
-    modal.hidden = true;
-    if (lastFocus) lastFocus.focus();
-  }
-  $('#modalClose').addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-
-  function renderProjects(filter) {
-    gridEl.innerHTML = '';
-    projects
-      .filter((p) => filter === 'All' || p.tags.indexOf(filter) !== -1)
-      .forEach((p) => {
-        const card = document.createElement('article');
-        card.className = 'card';
-        card.tabIndex = 0;
-        card.setAttribute('role', 'button');
-        card.innerHTML =
-          '<div class="card-top"><span class="badge">' + p.task + '</span><span class="repo">' + p.repo + '</span></div>' +
-          '<h3>' + p.title + '</h3><p>' + p.summary + '</p>' +
-          '<div class="tags">' + p.tags.map((t) => '<span>' + t + '</span>').join('') + '</div>' +
-          '<span class="more">Details →</span>';
-        card.addEventListener('click', () => openModal(p));
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(p); }
-        });
-        gridEl.appendChild(card);
-      });
-  }
-  ['All'].concat(allTags).forEach((tag, i) => {
-    const b = document.createElement('button');
-    b.className = 'chip' + (i === 0 ? ' active' : '');
-    b.textContent = tag;
-    b.addEventListener('click', () => {
-      $$('.chip', filtersEl).forEach((x) => x.classList.remove('active'));
-      b.classList.add('active');
-      renderProjects(tag);
+  function clearFocus() {
+    focused = null;
+    delete document.body.dataset.focus;
+    $$('.branch').forEach((b) => {
+      b.classList.remove('focus');
+      $('.bname', b).setAttribute('aria-pressed', 'false');
     });
-    filtersEl.appendChild(b);
-  });
-  renderProjects('All');
-
-  /* ---------- Interactive terminal ---------- */
-  const termBody = $('#termBody');
-  const termForm = $('#termForm');
-  const termInput = $('#termInput');
-  const history = [];
-  let hIdx = 0;
-
-  function tPrint(text, cls) {
-    const d = document.createElement('div');
-    if (cls) d.className = cls;
-    d.textContent = text;
-    termBody.appendChild(d);
-    termBody.scrollTop = termBody.scrollHeight;
+    resetBtn.hidden = true;
   }
-
-  const commands = {
-    'help': () => [
-      'Available commands:',
-      '  whoami              who am I',
-      '  projects            list my projects',
-      '  ls / pwd            look around',
-      '  git log             commit history of my Git project',
-      '  git branch          branches in my Git project',
-      '  git tag             release tags',
-      '  terraform plan      preview from my Terraform task',
-      '  terraform destroy   cleanup from my Terraform task',
-      '  theme               switch dark / light',
-      '  date                current date and time',
-      '  clear               clear the screen'
-    ],
-    'whoami': () => ['nikhilthk', 'DevOps intern learning Git, Terraform, Docker and GitHub Pages'],
-    'ls': () => ['README.md  index.html  screenshots  script.js  style.css'],
-    'pwd': () => ['/home/nikhilthk/github-pages-demo'],
-    'projects': () => projects.map((p) => p.task + '  ' + p.repo + '  (' + p.tags.join(', ') + ')'),
-    'git log': () => [
-      'e4f8f3c (HEAD -> main, tag: v1.0.0) Merge pull request #2 from nikhilthk/dev',
-      '285f38f Merge pull request #1 from nikhilthk/feature/readme-update',
-      'bd80cca docs: add project overview to README',
-      '820c672 Initial commit',
-      '(snapshot of the history of devops-git-project)'
-    ],
-    'git branch': () => ['  dev', '  feature/add-docs', '  feature/readme-update', '* main'],
-    'git tag': () => ['v1.0.0'],
-    'terraform plan': () => [
-      'Terraform will perform the following actions:',
-      '  + Docker image (nginx)',
-      '  + Docker container',
-      'Plan: 2 to add, 0 to change, 0 to destroy.'
-    ],
-    'terraform destroy': () => ['Destroy complete! Resources: 2 destroyed.'],
-    'date': () => [new Date().toString()]
-  };
-  commands['git log --oneline'] = commands['git log'];
-
-  function runCommand(raw) {
-    const cmd = raw.trim().replace(/\s+/g, ' ');
-    if (!cmd) return;
-    tPrint('$ ' + cmd, 't-cmd');
-    history.push(cmd);
-    hIdx = history.length;
-    const key = cmd.toLowerCase();
-    if (key === 'clear') { termBody.textContent = ''; return; }
-    if (key === 'theme') { toggleTheme(); tPrint('Theme switched to ' + currentTheme(), 't-dim'); return; }
-    if (commands[key]) { commands[key]().forEach((l) => tPrint(l)); }
-    else { tPrint('command not found: ' + cmd + '. Type "help" to see what works.', 't-err'); }
+  function checkout(i) {
+    if (focused === i) { clearFocus(); toast("Switched to branch 'main'"); return; }
+    focused = i;
+    document.body.dataset.focus = String(i);
+    const all = $$('.branch');
+    all.forEach((b, k) => {
+      b.classList.toggle('focus', k === i);
+      $('.bname', b).setAttribute('aria-pressed', String(k === i));
+    });
+    resetBtn.hidden = false;
+    setOpen($('.commit', all[i]), true);
+    toast("Switched to branch '" + branches[i].name + "'");
+    all[i].scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
   }
-  termForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    runCommand(termInput.value);
-    termInput.value = '';
-  });
-  termInput.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp' && hIdx > 0) { e.preventDefault(); hIdx--; termInput.value = history[hIdx]; }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (hIdx < history.length - 1) { hIdx++; termInput.value = history[hIdx]; }
-      else { hIdx = history.length; termInput.value = ''; }
+  host.addEventListener('click', (e) => {
+    const btn = e.target.closest('.c-btn');
+    if (btn) {
+      const c = btn.closest('.commit');
+      setOpen(c, !c.classList.contains('open'));
+      return;
     }
+    const chip = e.target.closest('.bname');
+    if (chip) checkout(Number(chip.dataset.i));
   });
-  termBody.addEventListener('click', () => termInput.focus());
-  tPrint('Welcome to my portfolio terminal.', 't-dim');
-  tPrint('Type "help" to see the commands, or tap a shortcut below.', 't-dim');
-  ['help', 'whoami', 'projects', 'git log', 'git branch', 'terraform plan', 'theme', 'clear'].forEach((cmd) => {
-    const b = document.createElement('button');
-    b.className = 'chip';
-    b.textContent = cmd;
-    b.addEventListener('click', () => runCommand(cmd));
-    $('#quick').appendChild(b);
+  resetBtn.addEventListener('click', () => { clearFocus(); toast("Switched to branch 'main'"); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && focused !== null) { clearFocus(); toast("Switched to branch 'main'"); }
   });
 
-  /* ---------- Pipeline simulator ---------- */
-  const stageEls = $$('#stages .stage');
-  const runBtn = $('#runBtn');
-  const failToggle = $('#failToggle');
-  const pipeStatus = $('#pipeStatus');
-  const logEl = $('#log');
-  const steps = [
-    { name: 'Commit', ms: 900, lines: ['git add . && git commit -m "update website"', 'git push origin main'] },
-    { name: 'Build', ms: 1100, lines: ['No dependencies to install (static site)', 'Packaging index.html, style.css, script.js'] },
-    { name: 'Test', ms: 1100, lines: ['Checking HTML structure...', 'Checking links...'] },
-    { name: 'Deploy', ms: 1200, lines: ['Uploading artifact to GitHub Pages...'] },
-    { name: 'Live', ms: 700, lines: ['Site is live: https://nikhilthk.github.io/github-pages-demo/'] }
-  ];
-  function log(text, cls) {
-    const t = new Date().toLocaleTimeString([], { hour12: false });
-    const d = document.createElement('div');
-    if (cls) d.className = cls;
-    d.textContent = '[' + t + '] ' + text;
-    logEl.appendChild(d);
-    logEl.scrollTop = logEl.scrollHeight;
+  /* ---------- Highlight the commit at the middle of the screen ---------- */
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => en.target.classList.toggle('current', en.isIntersecting));
+    }, { rootMargin: '-42% 0px -50% 0px' });
+    $$('.commit').forEach((c) => io.observe(c));
   }
-  function setStatus(text, cls) {
-    pipeStatus.textContent = text;
-    pipeStatus.className = 'status' + (cls ? ' ' + cls : '');
-  }
-  runBtn.addEventListener('click', async () => {
-    runBtn.disabled = true;
-    failToggle.disabled = true;
-    logEl.textContent = '';
-    stageEls.forEach((s) => s.classList.remove('active', 'done', 'fail'));
-    setStatus('Running...');
-    for (let i = 0; i < steps.length; i++) {
-      const st = steps[i];
-      stageEls[i].classList.add('active');
-      log('▶ ' + st.name, 'dim');
-      for (const line of st.lines) { log(line); await sleep(st.ms / (st.lines.length + 1)); }
-      await sleep(st.ms / (st.lines.length + 1));
-      if (st.name === 'Test' && failToggle.checked) {
-        stageEls[i].classList.replace('active', 'fail');
-        log('✖ 1 test failed: broken link in index.html', 'bad');
-        log('Pipeline stopped. Nothing was deployed.', 'bad');
-        setStatus('Failed at Test', 'bad');
-        runBtn.textContent = 'Fix and push again';
-        failToggle.checked = false;
-        runBtn.disabled = false;
-        failToggle.disabled = false;
-        return;
-      }
-      stageEls[i].classList.replace('active', 'done');
-      log('✔ ' + st.name + ' passed', 'ok');
-    }
-    setStatus('Deployed successfully', 'ok');
-    runBtn.textContent = 'Run again';
-    runBtn.disabled = false;
-    failToggle.disabled = false;
-  });
 
-  /* ---------- Contact form ---------- */
-  const form = $('#contactForm');
-  const cMsg = $('#cMsg');
-  cMsg.addEventListener('input', () => { $('#cCount').textContent = cMsg.value.length; });
+  /* ---------- git log view ---------- */
+  function buildLog() {
+    const out = ['<span class="dim">$ git log --graph --format=%s</span>'];
+    branches.forEach((b, i) => {
+      const label = i === 0 ? '(HEAD -> main) ' : (b.tag ? '(tag: ' + b.tag + ') ' : '');
+      out.push('<span class="k">*</span> ' + label + b.mergeTitle);
+      out.push('<span class="k">|\\</span>');
+      b.commits.forEach((c, j) => {
+        const tip = j === 0 ? '(' + b.name + ') ' : '';
+        out.push('<span class="k">|</span> <span style="color:' + b.color + ';font-weight:600">*</span> ' + tip + c.msg);
+      });
+      out.push('<span class="k">|/</span>');
+    });
+    out.push('<span class="dim">...</span>');
+    $('#logView').innerHTML = out.join('\n');
+  }
+  buildLog();
+
+  const vGraph = $('#vGraph');
+  const vLog = $('#vLog');
+  function setView(view) {
+    const log = view === 'log';
+    $('#history').hidden = log;
+    $('#logView').hidden = !log;
+    vGraph.setAttribute('aria-pressed', String(!log));
+    vLog.setAttribute('aria-pressed', String(log));
+  }
+  vGraph.addEventListener('click', () => setView('graph'));
+  vLog.addEventListener('click', () => setView('log'));
+
+  /* ---------- Contact form: opens a pre-filled GitHub issue ---------- */
+  const form = $('#issueForm');
+  const subject = $('#fSubject');
+  const message = $('#fMsg');
+  subject.addEventListener('input', () => { $('#fCount').textContent = subject.value.length + '/50'; });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const name = $('#cName').value.trim();
-    const email = $('#cEmail').value.trim();
-    const msg = cMsg.value.trim();
-    const eName = name.length < 2 ? 'Please enter your name.' : '';
-    const eEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Please enter a valid email.';
-    const eMsg = msg.length < 10 ? 'Message must be at least 10 characters.' : '';
-    $('#eName').textContent = eName;
-    $('#eEmail').textContent = eEmail;
-    $('#eMsg').textContent = eMsg;
-    if (eName || eEmail || eMsg) { showToast('Please fix the highlighted fields'); return; }
-    form.reset();
-    $('#cCount').textContent = '0';
-    showToast('Thanks ' + name + '! (Demo form: nothing was sent)');
+    const s = subject.value.trim();
+    const m = message.value.trim();
+    $('#eSubject').textContent = s.length < 3 ? 'Write a subject of at least 3 characters.' : '';
+    $('#eMsg').textContent = m.length < 10 ? 'Write a message of at least 10 characters.' : '';
+    if (s.length < 3 || m.length < 10) return;
+
+    const title = $('#fType').value + ': ' + s;
+    const url = REPO + '/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(m);
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Open the issue on GitHub';
+    link.click();
+
+    const note = $('#fNote');
+    note.textContent = 'GitHub should have opened in a new tab. Sign in there and press Submit new issue to send it. If nothing opened: ';
+    const again = link.cloneNode(true);
+    note.appendChild(again);
   });
-
-  /* ---------- Scroll effects ---------- */
-  const bar = $('#scrollBar');
-  const nav = $('#nav');
-  const toTop = $('#toTop');
-  let ticking = false;
-  function onScroll() {
-    const h = document.documentElement.scrollHeight - window.innerHeight;
-    bar.style.width = (h > 0 ? (window.scrollY / h) * 100 : 0) + '%';
-    nav.classList.toggle('scrolled', window.scrollY > 10);
-    toTop.hidden = window.scrollY < 500;
-    ticking = false;
-  }
-  window.addEventListener('scroll', () => {
-    if (!ticking) { ticking = true; requestAnimationFrame(onScroll); }
-  }, { passive: true });
-  onScroll();
-  toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-  if ('IntersectionObserver' in window) {
-    const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); revealObs.unobserve(en.target); } });
-    }, { threshold: 0.12 });
-    $$('.reveal').forEach((el) => revealObs.observe(el));
-
-    const links = $$('#navLinks a');
-    const navObs = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          links.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id));
-        }
-      });
-    }, { rootMargin: '-40% 0px -55% 0px' });
-    ['home', 'projects', 'terminal', 'pipeline', 'contact'].forEach((id) => navObs.observe($('#' + id)));
-  } else {
-    $$('.reveal').forEach((el) => el.classList.add('in'));
-  }
-
-  /* ---------- Keyboard + footer ---------- */
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { if (!modal.hidden) closeModal(); closeMenu(); }
-  });
-  $('#year').textContent = new Date().getFullYear();
 })();
