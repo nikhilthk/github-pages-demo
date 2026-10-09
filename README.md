@@ -1,6 +1,6 @@
 # github-pages-demo
 
-Task 6: Host a static website with GitHub Pages.
+Task 5: Host a static website with GitHub Pages.
 
 ## Live website
 https://nikhilthk.github.io/github-pages-demo/
