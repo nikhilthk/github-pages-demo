@@ -9,8 +9,8 @@
   const branches = [
     {
       name: 'feature/github-pages', color: '#D1432A', soft: 'rgba(209,67,42,.22)',
-      mergeTitle: 'Merge Task 6: a static website on GitHub Pages',
-      mergeText: 'Task 6 asked for a live HTML site and a repo. This page is the result: hand-written HTML, CSS and JavaScript, published for free.',
+      mergeTitle: 'Merge Task 5: a static website on GitHub Pages',
+      mergeText: 'Task 5 asked for a live HTML site and a repo. This page is the result: hand-written HTML, CSS and JavaScript, published for free.',
       commits: [
         { msg: 'Redraw the portfolio as a git graph', text: 'You are looking at it. Each task is a branch, each step is a commit, and the site is still plain files with no framework and no build step.' },
         { msg: 'Put the live link on the repository', text: `In the repo's About box, "Use your GitHub Pages website" shows the live address next to the code, so a reviewer finds both in one place.` },
