@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>nikhilthk | DevOps on GitHub Pages</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <span class="logo">⚙️ DevOps Journey</span>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#pipeline">Pipeline</a>
+    <a href="#checklist">Checklist</a>
+    <button id="themeToggle" aria-label="Toggle theme">🌙</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <p class="eyebrow">DevOps Internship · Task 6</p>
+  <h1>Hello, I'm <span class="accent">nikhilthk</span></h1>
+  <p class="typing">I deploy <span id="typed"></span><span class="cursor">|</span></p>
+  <a class="btn" href="#pipeline">Try the deploy demo ↓</a>
+</header>
+
+<main>
+  <section id="about">
+    <h2>Why GitHub Pages?</h2>
+    <p class="sub">Free hosting for static sites, straight from a repository.</p>
+    <div class="cards">
+      <div class="card"><div class="icon">💸</div><h3>Free</h3><p>No servers to pay for. Host HTML, CSS and JavaScript at no cost.</p></div>
+      <div class="card"><div class="icon">🔀</div><h3>Git-powered</h3><p>Every push to the main branch updates the live website.</p></div>
+      <div class="card"><div class="icon">⚡</div><h3>Fast to set up</h3><p>Enable it in Settings, pick a branch and your site is live in minutes.</p></div>
+    </div>
+  </section>
+
+  <section id="pipeline">
+    <h2>Deploy pipeline demo</h2>
+    <p class="sub">Click the button to watch a push go live.</p>
+    <div class="panel">
+      <div class="pipeline">
+        <div class="stage"><span>📝</span>Commit</div>
+        <div class="stage"><span>🔨</span>Build</div>
+        <div class="stage"><span>🚀</span>Deploy</div>
+        <div class="stage"><span>🌍</span>Live</div>
+      </div>
+      <div class="pipe-controls">
+        <button class="run" id="runBtn">Run deployment</button>
+        <span id="pipeStatus" class="status">Waiting for a push...</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="checklist">
+    <h2>My deployment checklist</h2>
+    <p class="sub">Tick each step as you go.</p>
+    <div class="panel">
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span>Create an index.html file</span></label></li>
+        <li><label><input type="checkbox"><span>Push it to a new GitHub repo</span></label></li>
+        <li><label><input type="checkbox"><span>Repo, Settings, Pages, enable GitHub Pages</span></label></li>
+        <li><label><input type="checkbox"><span>Select main branch and root folder</span></label></li>
+        <li><label><input type="checkbox"><span>Open the live link GitHub gives</span></label></li>
+        <li><label><input type="checkbox"><span>Customise with CSS</span></label></li>
+      </ul>
+      <div class="progress"><div id="bar"></div></div>
+      <small><span id="pct">0%</span> complete</small>
+      <p id="doneMsg" class="done-msg" hidden>🎉 All steps done. The site is live!</p>
+    </div>
+  </section>
+</main>
+
+<footer>Made by nikhilthk · Hosted on GitHub Pages</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
